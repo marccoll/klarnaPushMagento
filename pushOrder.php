@@ -97,31 +97,54 @@ $orderGenerator = new OrderGenerator();
 $orderGenerator->setCustomer($customerId);
 
 $newOrder = array();
+
+/*
+$cart = array(
+  array(
+      'reference' => 'c1234',
+      'merchant_item_data' => 'size:MEDIUM;',
+      'quantity' => 1
+  ),
+  array(
+      'reference' => '4321',
+      'quantity' => 2
+  )
+);*/
+
+
 foreach ($cart as $key => $prod) {
   $ord = array(
       'product' => $prod['reference'],
       'qty' => $prod['quantity']
   );
 
-  /**
-    * TODO add product attr or options
-    * we use $prod['merchant_item_data'] to store atributes and result will be like
-    * "merchant_item_data": "size:L;color:Blue;attr_x:y;"
-  **/
-  /*
+  // get conf product info and convert it into codes
   if(isset($prod['merchant_item_data'])){
+
     $attrs = explode(';', $prod['merchant_item_data']);
     // remove last array value because is set to ''
     array_pop($attrs);
-    $options = array();
+
+    $sAttrs = array();
     foreach ($attrs as $key => $attr) {
       $attrData = explode(':', $attr);
-      array_push($options, $attrData);
-    }
+      $label = $attrData[0];
+      $value = $attrData[1];
 
-    var_dump($options);
-    $ord['options'] = $options;
-  }*/
+      // get label code
+      $attr = Mage::getModel('eav/entity_attribute')->getCollection()->addFieldToFilter('frontend_label', $label);
+      $labelId = $attr->getData()[0]['attribute_id'];
+
+      // get value code
+      $_product = Mage::getModel('catalog/product');
+      $labelData = $_product->getResource()->getAttribute($label);
+      if ($labelData->usesSource()) {
+         $valueId = $labelData->getSource()->getOptionId($value);
+      }
+
+      $ord['super_attribute'][intval($labelId)] = intval($valueId);
+    }
+  }
 
   array_push($newOrder, $ord);
 };

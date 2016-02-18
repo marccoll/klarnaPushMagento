@@ -42,7 +42,7 @@ class OrderGenerator
 
         // TODO set currency code for international ecommerce
         $currencyCode  = Mage::app()->getBaseCurrencyCode();
-        
+
         $this->_order = Mage::getModel('sales/order')
             ->setIncrementId($reservedOrderId)
             ->setStoreId($this->_storeId)
