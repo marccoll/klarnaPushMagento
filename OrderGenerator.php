@@ -148,7 +148,7 @@ class OrderGenerator
         $request = new Varien_Object();
         $request->setData($requestData);
 
-        $product = Mage::getModel('catalog/product')->loadByAttribute('sku', $request['product']);
+        $product = Mage::getModel('catalog/product')->load($request['product']);
 
         $cartCandidates = $product->getTypeInstance(true)
             ->prepareForCartAdvanced($request, $product);
