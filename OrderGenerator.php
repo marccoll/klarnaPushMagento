@@ -14,12 +14,12 @@ class OrderGenerator
     protected $_order;
     protected $_storeId;
 
-    // get tax rate
+    /* get tax rate
     protected $store = Mage::app()->getStore('default');
     protected $taxCalculation = Mage::getModel('tax/calculation');
     protected $request = $taxCalculation->getRateRequest(null, null, null, $store);
     protected $taxClassId = $product->getTaxClassId();
-    protected $percent = $taxCalculation->getRate($request->setProductClassId($taxClassId));
+    protected $percent = $taxCalculation->getRate($request->setProductClassId($taxClassId));*/
 
     public function setShippingMethod($methodName)
     {
