@@ -1,0 +1,16 @@
+<?php
+
+// set app/Mage.php file path
+$magePath = '../app/Mage.php';
+
+$klarna_secret = 'klarna secret key';
+$klarna_auth = base64_encode(hash('sha256', $klarna_secret, true));
+
+// set shipping method code
+$shippingMethodCode = '';
+
+// set payment method
+$paymentMethodCode = 'klarnapayment';
+
+// list of size code attributes (array) ex: size, size_shoe, size_clothes..
+$sizeAttrNames = ['attr1', 'attr2'];

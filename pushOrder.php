@@ -6,147 +6,185 @@ NOTES, discuss / review
 - Every time we edit user we add klarna address (so maybe we create some duplicates). TODO check if exist before create new one.
 - Check customer associate to website (maybe we could add reve)
 - Add currency code, shipping method and payment method in order.
-- Using sku to find products
 - TODO Create an error handler
-- TODO Add custom atribute (klarna_order) to order and check if order already exist before create a new one.
 */
 
 require_once 'env.php';
+require_once 'Klarna/Checkout.php';
 
-require_once '../app/Mage.php';
+require_once $magePath;
 umask(0);
 Mage::app('default');
 
 require_once 'OrderGenerator.php';
 require_once 'CustomerGenerator.php';
 
+
 // get url params
-//$isReve = $_GET['reve'];
-//$transaction = $_GET['transaction'];
 $klarna_order = $_GET['klarna_order'];
 
-// load klarna order
-$curl = curl_init();
 
-$header = array();
-$header[] = 'Authorization: Klarna ' . $klarna_auth;
-$header[] = 'Accept: application/vnd.klarna.checkout.aggregated-order-v2+json';
+// get klarna order
+$connector = Klarna_Checkout_Connector::create(
+    $klarna_secret,
+    Klarna_Checkout_Connector::BASE_TEST_URL
+);
 
-curl_setopt($curl, CURLOPT_URL, 'https://checkout.testdrive.klarna.com/checkout/orders/' . $klarna_order );
-curl_setopt($curl, CURLOPT_HTTPHEADER,$header);
-curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+$order = new Klarna_Checkout_Order($connector, $klarna_order);
+try {
+    $order->fetch();
+} catch (Klarna_Checkout_ApiErrorException $e) {
+    var_dump($e->getMessage());
+    var_dump($e->getPayload());
+    die;
+}
 
-$order = curl_exec($curl);
-curl_close($curl);
+var_dump($order);
 
-$orderData = json_decode($order, true);
+// check if order already exist
+if($order['status'] == 'created'){
+  echo 'order already exist';
+  die;
+}else{
 
-// match klarna data with magento structure
-$user = $orderData['shipping_address'];
-$cart = $orderData['cart']['items'];
+  echo 'order not exist, ';
+  // match klarna data with magento structure
+  $user = $order['shipping_address'];
+  $cart = $order['cart']['items'];
+  
+  $customerData = array (
+        'account' => array(
+            'website_id' => '1',
+            'group_id' => '1',
+            'prefix' => '',
+            'firstname' => $user['given_name'],
+            'middlename' => '',
+            'lastname' => $user['family_name'],
+            'suffix' => '',
+            'email' => $user['email'],
+            'dob' => '',
+            'taxvat' => '',
+            'gender' => '',
+            'sendemail_store_id' => '1',
+            'password' => rand(10000000,99999999),
+            'default_billing' => '_item1',
+            'default_shipping' => '_item1',
+        ),
+        'address' => array(
+            '_item1' => array(
+                'prefix' => '',
+                'firstname' => $user['given_name'],
+                'middlename' => '',
+                'lastname' => $user['family_name'],
+                'suffix' => '',
+                'company' => '',
+                'street' => array(
+                    0 => $user['street_address'],
+                    1 => '',
+                ),
+                'city' => $user['city'],
+                'country_id' => strtoupper($user['country']),
+                'region_id' => '',
+                'region' => '',
+                'postcode' => $user['postal_code'],
+                'telephone' => $user['phone'],
+                'fax' => '',
+                'vat_id' => '',
+            ),
+        ),
+    );
+  
+  // create or update customer account
+  $customerGenerator = new CustomerGenerator();
+  $customerGenerated = $customerGenerator->createCustomer($customerData);
+  $customerId = $customerGenerated->getId();
 
-$customerData = array (
-      'account' => array(
-          'website_id' => '1',
-          'group_id' => '1',
-          'prefix' => '',
-          'firstname' => $user['given_name'],
-          'middlename' => '',
-          'lastname' => $user['family_name'],
-          'suffix' => '',
-          'email' => $user['email'],
-          'dob' => '',
-          'taxvat' => '',
-          'gender' => '',
-          'sendemail_store_id' => '1',
-          'password' => rand(10000000,99999999),
-          'default_billing' => '_item1',
-          'default_shipping' => '_item1',
-      ),
-      'address' => array(
-          '_item1' => array(
-              'prefix' => '',
-              'firstname' => $user['given_name'],
-              'middlename' => '',
-              'lastname' => $user['family_name'],
-              'suffix' => '',
-              'company' => '',
-              'street' => array(
-                  0 => $user['street_address'],
-                  1 => '',
-              ),
-              'city' => $user['city'],
-              'country_id' => strtoupper($user['country']),
-              'region_id' => '',
-              'region' => '',
-              'postcode' => $user['postal_code'],
-              'telephone' => $user['phone'],
-              'fax' => '',
-              'vat_id' => '',
-          ),
-      ),
-  );
+  echo ', user : ' . $customerId;
+  
+  // create order
+  $orderGenerator = new OrderGenerator();
+  $orderGenerator->setShippingMethod($shippingMethodCode);
+  $orderGenerator->setPaymentMethod($paymentMethodCode);
+  $orderGenerator->setCustomer($customerId);
+  
+  $newOrder = array();
 
-// create or update customer account
-$customerGenerator = new CustomerGenerator();
-$customerGenerated = $customerGenerator->createCustomer($customerData);
-$customerId = $customerGenerated->getId();
+  foreach ($cart as $key => $prod) {
+    $ord = array(
+        'product' => $prod['reference'],
+        'qty' => $prod['quantity']
+    );
+  
+    // get conf product info and convert it into codes
+    if(isset($prod['merchant_item_data'])){
+  
+      $attrs = explode(';', $prod['merchant_item_data']);
+      // remove last array value because is set to ''
+      array_pop($attrs);
+  
+      $sAttrs = array();
+      foreach ($attrs as $key => $attr) {
+        $attrData = explode(':', $attr);
+        $label = $attrData[0];
+        $value = $attrData[1];
+        
+        $attrInfo = getAttrInfo($label, $value, $sizeAttrNames);
 
-// create order
-$orderGenerator = new OrderGenerator();
-$orderGenerator->setCustomer($customerId);
+        $ord['super_attribute'][intval($attrInfo['labelId'])] = intval($attrInfo['valueId']);
+      }
+    }
+  
+    array_push($newOrder, $ord);
+  };
+  
+  
+  if($orderGenerator->createOrder($newOrder)){
+    echo ', order created';
 
-$newOrder = array();
+    $update['status'] = 'created';
+    try {
+      $order->update($update);
+    } catch (Klarna_Checkout_ApiErrorException $e) {
+        var_dump($e->getMessage());
+        var_dump($e->getPayload());
+    }
+  }else{
+    echo ', something goes wrong creating order';
+  }
 
-/*
-$cart = array(
-  array(
-      'reference' => 'c1234',
-      'merchant_item_data' => 'size:MEDIUM;',
-      'quantity' => 1
-  ),
-  array(
-      'reference' => '4321',
-      'quantity' => 2
-  )
-);*/
+}
 
 
-foreach ($cart as $key => $prod) {
-  $ord = array(
-      'product' => $prod['reference'],
-      'qty' => $prod['quantity']
-  );
+// HELPERS
+function getAttrInfo($label, $value, $sizeAttrNames){
+  $attrInfo = Array();
 
-  // get conf product info and convert it into codes
-  if(isset($prod['merchant_item_data'])){
+  if($label == 'size'){
+    foreach ($sizeAttrNames as $attrName) {
+      $attribute = Mage::getSingleton('eav/config')->getAttribute('catalog_product', $attrName);
+      $attrInfo['labelId'] = $attribute->getId();
 
-    $attrs = explode(';', $prod['merchant_item_data']);
-    // remove last array value because is set to ''
-    array_pop($attrs);
-
-    $sAttrs = array();
-    foreach ($attrs as $key => $attr) {
-      $attrData = explode(':', $attr);
-      $label = $attrData[0];
-      $value = $attrData[1];
-
-      // get label code
-      $attr = Mage::getModel('eav/entity_attribute')->getCollection()->addFieldToFilter('frontend_label', $label);
-      $labelId = $attr->getData()[0]['attribute_id'];
-
-      // get value code
-      $_product = Mage::getModel('catalog/product');
-      $labelData = $_product->getResource()->getAttribute($label);
-      if ($labelData->usesSource()) {
-         $valueId = $labelData->getSource()->getOptionId($value);
+      if ($attribute->usesSource()) {
+        $attrInfo['valueId'] = $attribute->getSource()->getOptionId($value);
       }
 
-      $ord['super_attribute'][intval($labelId)] = intval($valueId);
+      if($attrInfo['valueId']){
+        break;
+      }
+    }
+
+  }else{
+    $attr = Mage::getModel('eav/entity_attribute')->getCollection()->addFieldToFilter('frontend_label', $label);
+    $attrInfo['labelId'] = $attr->getData()[0]['attribute_id'];
+    // get value code
+    $_product = Mage::getModel('catalog/product');
+    $labelData = $_product->getResource()->getAttribute($label);
+    if ($labelData->usesSource()) {
+      $attrInfo['valueId'] = $labelData->getSource()->getOptionId($value);
     }
   }
 
-  array_push($newOrder, $ord);
-};
+  return $attrInfo;
+}
 
-$orderGenerator->createOrder($newOrder);
+

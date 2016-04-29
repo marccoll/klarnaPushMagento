@@ -14,6 +14,13 @@ class OrderGenerator
     protected $_order;
     protected $_storeId;
 
+    // get tax rate
+    protected $store = Mage::app()->getStore('default');
+    protected $taxCalculation = Mage::getModel('tax/calculation');
+    protected $request = $taxCalculation->getRateRequest(null, null, null, $store);
+    protected $taxClassId = $product->getTaxClassId();
+    protected $percent = $taxCalculation->getRate($request->setProductClassId($taxClassId));
+
     public function setShippingMethod($methodName)
     {
         $this->_shippingMethod = $methodName;
@@ -33,7 +40,7 @@ class OrderGenerator
 
     public function createOrder($products)
     {
-
+        echo ', start order';
         $transaction = Mage::getModel('core/resource_transaction');
         $this->_storeId = $this->_customer->getStoreId();
         $reservedOrderId = Mage::getSingleton('eav/config')
@@ -131,7 +138,7 @@ class OrderGenerator
         $transaction->addCommitCallback(array($this->_order, 'save'));
         $transaction->save();
 
-        echo ', order created';
+        return true;
     }
 
     protected function _addProducts($products)

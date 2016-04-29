@@ -65,7 +65,7 @@ class CustomerGenerator
         }
 
         if($isNew){
-            echo 'create user';
+            echo 'creating user';
             $customer
                 ->setPassword($data['account']['password'])
                 ->setForceConfirmed(true)
