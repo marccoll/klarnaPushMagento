@@ -1,15 +1,6 @@
 <?php
 
-/*
-NOTES, discuss / review
-- For users with account in store we update billing info and create new shipping address
-- Every time we edit user we add klarna address (so maybe we create some duplicates). TODO check if exist before create new one.
-- Check customer associate to website (maybe we could add reve)
-- Add currency code, shipping method and payment method in order.
-- TODO Create an error handler
-*/
-
-require_once 'env.php';
+require_once 'config.php';
 require_once 'Klarna/Checkout.php';
 
 require_once $magePath;
@@ -51,7 +42,7 @@ if($order['status'] == 'created'){
   // match klarna data with magento structure
   $user = $order['shipping_address'];
   $cart = $order['cart']['items'];
-  
+
   $customerData = array (
         'account' => array(
             'website_id' => '1',
@@ -93,20 +84,20 @@ if($order['status'] == 'created'){
             ),
         ),
     );
-  
+
   // create or update customer account
   $customerGenerator = new CustomerGenerator();
   $customerGenerated = $customerGenerator->createCustomer($customerData);
   $customerId = $customerGenerated->getId();
 
   echo ', user : ' . $customerId;
-  
+
   // create order
   $orderGenerator = new OrderGenerator();
   $orderGenerator->setShippingMethod($shippingMethodCode);
   $orderGenerator->setPaymentMethod($paymentMethodCode);
   $orderGenerator->setCustomer($customerId);
-  
+
   $newOrder = array();
 
   foreach ($cart as $key => $prod) {
@@ -114,30 +105,30 @@ if($order['status'] == 'created'){
         'product' => $prod['reference'],
         'qty' => $prod['quantity']
     );
-  
+
     // get conf product info and convert it into codes
     if(isset($prod['merchant_item_data'])){
-  
+
       $attrs = explode(';', $prod['merchant_item_data']);
       // remove last array value because is set to ''
       array_pop($attrs);
-  
+
       $sAttrs = array();
       foreach ($attrs as $key => $attr) {
         $attrData = explode(':', $attr);
         $label = $attrData[0];
         $value = $attrData[1];
-        
+
         $attrInfo = getAttrInfo($label, $value, $sizeAttrNames);
 
         $ord['super_attribute'][intval($attrInfo['labelId'])] = intval($attrInfo['valueId']);
       }
     }
-  
+
     array_push($newOrder, $ord);
   };
-  
-  
+
+
   if($orderGenerator->createOrder($newOrder)){
     echo ', order created';
 
@@ -186,5 +177,3 @@ function getAttrInfo($label, $value, $sizeAttrNames){
 
   return $attrInfo;
 }
-
-
