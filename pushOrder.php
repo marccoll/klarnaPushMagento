@@ -2,18 +2,20 @@
 
 require_once 'config.php';
 require_once 'Klarna/Checkout.php';
+require_once 'LogClass.php';
 
 require_once $magePath;
 umask(0);
-Mage::app('default');
+Mage::app();
 
 require_once 'OrderGenerator.php';
 require_once 'CustomerGenerator.php';
 
 
 // get url params
+$storeID = $_GET['storeID'];
 $klarna_order = $_GET['klarna_order'];
-
+Log::add($klarna_order . ': push received');
 
 // get klarna order
 $connector = Klarna_Checkout_Connector::create(
@@ -23,22 +25,20 @@ $connector = Klarna_Checkout_Connector::create(
 
 $order = new Klarna_Checkout_Order($connector, $klarna_order);
 try {
-    $order->fetch();
+  $order->fetch();
 } catch (Klarna_Checkout_ApiErrorException $e) {
-    var_dump($e->getMessage());
-    var_dump($e->getPayload());
-    die;
+  Log::add($klarna_order . ': error on klarna connection');
+  var_dump($e->getMessage());
+  var_dump($e->getPayload());
+  die;
 }
-
-var_dump($order);
 
 // check if order already exist
 if($order['status'] == 'created'){
-  echo 'order already exist';
+  Log::add($klarna_order . ': order already exist');
   die;
 }else{
-
-  echo 'order not exist, ';
+  Log::add($klarna_order . ': order not exist in system, processing');
   // match klarna data with magento structure
   $user = $order['shipping_address'];
   $cart = $order['cart']['items'];
@@ -90,10 +90,13 @@ if($order['status'] == 'created'){
   $customerGenerated = $customerGenerator->createCustomer($customerData);
   $customerId = $customerGenerated->getId();
 
-  echo ', user : ' . $customerId;
+  Log::add($klarna_order . ': user : ' . $customerId);
 
   // create order
   $orderGenerator = new OrderGenerator();
+  if($storeID){
+    $orderGenerator->setStoreId($storeID);
+  }
   $orderGenerator->setShippingMethod($shippingMethodCode);
   $orderGenerator->setPaymentMethod($paymentMethodCode);
   $orderGenerator->setCustomer($customerId);
@@ -130,17 +133,18 @@ if($order['status'] == 'created'){
 
 
   if($orderGenerator->createOrder($newOrder)){
-    echo ', order created';
+    Log::add($klarna_order . ': order created');
 
     $update['status'] = 'created';
     try {
       $order->update($update);
     } catch (Klarna_Checkout_ApiErrorException $e) {
-        var_dump($e->getMessage());
-        var_dump($e->getPayload());
+      Log::add($klarna_order . ': error getting order from klarna');
+      var_dump($e->getMessage());
+      var_dump($e->getPayload());
     }
   }else{
-    echo ', something goes wrong creating order';
+    Log::add($klarna_order . ': something goes wrong creating order');
   }
 
 }

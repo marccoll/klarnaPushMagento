@@ -4,7 +4,6 @@ class OrderGenerator
 {
     const CUSTOMER_RANDOM = null;
 
-    // TODO add default shipping and payment method
     protected $_shippingMethod = 'freeshipping_freeshipping';
     protected $_paymentMethod = 'cashondelivery';
 
@@ -20,6 +19,11 @@ class OrderGenerator
     protected $request = $taxCalculation->getRateRequest(null, null, null, $store);
     protected $taxClassId = $product->getTaxClassId();
     protected $percent = $taxCalculation->getRate($request->setProductClassId($taxClassId));*/
+
+    public function setStoreId($id)
+    {
+        $this->_storeId = $id;
+    }
 
     public function setShippingMethod($methodName)
     {
