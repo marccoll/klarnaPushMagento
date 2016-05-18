@@ -1,21 +1,17 @@
 <?php
 
 // set app/Mage.php file path
-$magePath = '../app/Mage.php';
+define("MAGE_PATH", "../app/Mage.php");
 
-// environment (production, test)
-$klarna_env = 'production';
-
-// prod credentials
-$prod_klarna_secret = 'secret key';
-// test credentials
-$test_klarna_secret = 'secret key';
+// klarna settings
+define("KLARNA_ENV",    "production");
+define("KLARNA_SECRET", "secret key");
 
 // set shipping method code
-$shippingMethodCode = '';
+define("SHIPPING_METHOD_CODE", "");
 
 // set payment method
-$paymentMethodCode = 'klarnapayment';
+define("PAYMENT_METHOD_CODE", "klarnapayment");
 
 // list of size code attributes (array) ex: size, size_shoe, size_clothes..
 $sizeAttrNames = ['attr1', 'attr2'];
