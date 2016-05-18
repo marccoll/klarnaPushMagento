@@ -11,6 +11,14 @@ Mage::app();
 require_once 'OrderGenerator.php';
 require_once 'CustomerGenerator.php';
 
+// set env credentials
+if($klarna_env == 'test'){
+  $klarna_url = Klarna_Checkout_Connector::BASE_TEST_URL;
+  $klarna_secret = $test_klarna_secret;
+}else{
+  $klarna_url = Klarna_Checkout_Connector::BASE_URL;
+  $klarna_secret = $prod_klarna_secret;
+}
 
 // get url params
 $storeID = $_GET['storeID'];
@@ -19,8 +27,8 @@ Log::add($klarna_order . ': push received');
 
 // get klarna order
 $connector = Klarna_Checkout_Connector::create(
-    $klarna_secret,
-    Klarna_Checkout_Connector::BASE_TEST_URL
+    base64_encode(hash('sha256', $klarna_secret, true)),
+    $klarna_url
 );
 
 $order = new Klarna_Checkout_Order($connector, $klarna_order);
