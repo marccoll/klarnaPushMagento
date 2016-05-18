@@ -3,8 +3,13 @@
 // set app/Mage.php file path
 $magePath = '../app/Mage.php';
 
-$klarna_secret = 'klarna secret key';
-$klarna_auth = base64_encode(hash('sha256', $klarna_secret, true));
+// environment (production, test)
+$klarna_env = 'production';
+
+// prod credentials
+$prod_klarna_secret = 'secret key';
+// test credentials
+$test_klarna_secret = 'secret key';
 
 // set shipping method code
 $shippingMethodCode = '';
