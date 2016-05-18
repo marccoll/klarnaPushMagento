@@ -44,7 +44,6 @@ class OrderGenerator
 
     public function createOrder($products)
     {
-        echo ', start order';
         $transaction = Mage::getModel('core/resource_transaction');
         $this->_storeId = $this->_customer->getStoreId();
         $reservedOrderId = Mage::getSingleton('eav/config')
