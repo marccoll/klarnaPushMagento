@@ -65,14 +65,14 @@ class CustomerGenerator
         }
 
         if($isNew){
-            Log::add($klarna_order . ': creating user');
+            doLog('creating user');
             $customer
                 ->setPassword($data['account']['password'])
                 ->setForceConfirmed(true)
                 ->save();
             $customer->cleanAllAddresses();
         }else{
-            Log::add($klarna_order . ': updating user');
+            doLog('updating user');
             $customer->save();
 	        $customer->setConfirmation(null);
 	        $customer->save();
