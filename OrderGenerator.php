@@ -239,7 +239,7 @@ class OrderGenerator
             ->setProductId($product->getId())
             ->setProductType($product->getTypeId())
             ->setQtyBackordered(NULL)
-            ->setTotalQtyOrdered($product['rqty'])
+            ->setTotalQtyOrdered($product['qty'])
             ->setQtyOrdered($product['qty'])
             ->setName($product->getName())
             ->setSku($product->getSku())
