@@ -1,14 +1,15 @@
 <?php
 require_once 'config.php';
 require_once 'Klarna/Checkout.php';
-require_once 'LogClass.php';
 
 // magento
 require_once MAGE_PATH;
-require_once 'OrderGenerator.php';
 require_once 'CustomerGenerator.php';
 umask(0);
 Mage::app();
+
+// get magento config
+define('SEND_ORDER_MAIL', Mage::getStoreConfig('sales_email')['order']['enabled'] == 1);
 
 // get url params
 define('KLARNA_ORDER_ID',  $_GET['klarna_order']);
@@ -18,15 +19,13 @@ $storeID = $_GET['storeID'];
 define("OUTPUT_LOG", $_GET['verbose']);
 function doLog($message) {
   $prefix = KLARNA_ORDER_ID .': ';
-  // TODO: use Mage::Log instead
-  // Mage::Log($prefix . $message, null, "klarna-pushorder.log", true);
-  Log::add($prefix . $message);
+  Mage::Log($prefix . $message, null, "klarna-pushorder.log", true);
   if (OUTPUT_LOG) echo $message ."<br>";
 }
 
 doLog('push received');
 if (KLARNA_ORDER_ID == "") {
-  doLog("missing order id");
+  doLog("missing klarna order id");
   exit;
 }
 
@@ -38,137 +37,176 @@ $connector = Klarna_Checkout_Connector::create(
   $klarna_url
 );
 
-// fetch order
-$order = new Klarna_Checkout_Order($connector, KLARNA_ORDER_ID);
+// fetch klarna order
+$klarnaOrder = new Klarna_Checkout_Order($connector, KLARNA_ORDER_ID);
 try {
-  $order->fetch();
-  doLog('order fetched');
+  $klarnaOrder->fetch();
+  doLog('klarna order fetched');
 } catch (Exception $e) {
   doLog('error on klarna connection. Exception:'. $e);
   exit;
 }
 
 // check if order already exist
-if ($order['status'] == 'created') {
-  doLog('order already exist');
+if ($klarnaOrder['status'] == 'created') {
+  doLog('klarna order already exist');
   exit;
 
 } else { // start order processing
-  doLog('processing order');
+  doLog('processing klarna order');
 
   // match klarna data with magento structure
-  $user = $order['shipping_address'];
-  $cart = $order['cart']['items'];
-
-  $customerData = array (
-        'account' => array(
-            'website_id' => '1',
-            'group_id' => '1',
-            'prefix' => '',
-            'firstname' => $user['given_name'],
-            'middlename' => '',
-            'lastname' => $user['family_name'],
-            'suffix' => '',
-            'email' => $user['email'],
-            'dob' => '',
-            'taxvat' => '',
-            'gender' => '',
-            'sendemail_store_id' => '1',
-            'password' => randomPassword(),
-            'default_billing' => '_item1',
-            'default_shipping' => '_item1',
-        ),
-        'address' => array(
-            '_item1' => array(
-                'prefix' => '',
-                'firstname' => $user['given_name'],
-                'middlename' => '',
-                'lastname' => $user['family_name'],
-                'suffix' => '',
-                'company' => '',
-                'street' => array(
-                    0 => $user['street_address'],
-                    1 => '',
-                ),
-                'city' => $user['city'],
-                'country_id' => strtoupper($user['country']),
-                'region_id' => '',
-                'region' => '',
-                'postcode' => $user['postal_code'],
-                'telephone' => $user['phone'],
-                'fax' => '',
-                'vat_id' => '',
-            ),
-        ),
-    );
+  $user = $klarnaOrder['shipping_address'];
+  $cart = $klarnaOrder['cart']['items'];
 
   // create or update customer account
-
+  $customerData = array (
+    'account' => array(
+      'website_id' => '1',
+      'group_id' => '1',
+      'prefix' => '',
+      'firstname' => $user['given_name'],
+      'middlename' => '',
+      'lastname' => $user['family_name'],
+      'suffix' => '',
+      'email' => $user['email'],
+      'dob' => '',
+      'taxvat' => '',
+      'gender' => '',
+      'sendemail_store_id' => '1',
+      'password' => randomPassword(),
+      'default_billing' => '_item1',
+      'default_shipping' => '_item1',
+    ),
+    'address' => array(
+      '_item1' => array(
+        'prefix' => '',
+        'firstname' => $user['given_name'],
+        'middlename' => '',
+        'lastname' => $user['family_name'],
+        'suffix' => '',
+        'company' => '',
+        'street' => array(
+          0 => $user['street_address'],
+          1 => '',
+        ),
+        'city' => $user['city'],
+        'country_id' => strtoupper($user['country']),
+        'region_id' => '',
+        'region' => '',
+        'postcode' => $user['postal_code'],
+        'telephone' => $user['phone'],
+        'fax' => '',
+        'vat_id' => '',
+      ),
+    ),
+  );
   $customerId = 0;
+  $_customer = null;
   try {
     $customerGenerator = new CustomerGenerator();
-    $customerGenerated = $customerGenerator->createCustomer($customerData);
-    $customerId = $customerGenerated->getId();
+    $_customer = $customerGenerator->createCustomer($customerData);
+    $customerId = $_customer->getId();
   } catch (Exception $e) {
     doLog("can't create/update customer. Exception:". $e);
     exit;
   }
   doLog('user : ' . $customerId);
 
-  // create order
-  $orderGenerator = new OrderGenerator();
-  if ($storeID) $orderGenerator->setStoreId($storeID);
-  $orderGenerator->setShippingMethod(SHIPPING_METHOD_CODE);
-  $orderGenerator->setPaymentMethod(PAYMENT_METHOD_CODE);
-  $orderGenerator->setCustomer($customerId);
 
-  $newOrder = array();
 
+  // create sales quote
+  $quote = Mage::getModel('sales/quote');
+  if ($storeID) {
+    $quote->setStoreId($storeID);
+  } else {
+    $quote->setStoreId(Mage::app()->getStore('default')->getId());
+  }
+
+  // add item to quote
   foreach ($cart as $key => $prod) {
-    $ord = array(
-        'product' => $prod['reference'],
-        'qty' => $prod['quantity']
+    // load product
+    $productId = $prod['reference'];
+    $variantAttr = array(
+      'qty' => intval($prod['quantity'])
     );
 
-    // get conf product info and convert it into codes
+    // get product variant attribute id
     if (isset($prod['merchant_item_data'])) {
 
-      $attrs = explode(';', $prod['merchant_item_data']);
+      $merchantItemData = explode(';', $prod['merchant_item_data']);
       $sAttrs = array();
-      foreach ($attrs as $key => $attr) {
+      foreach ($merchantItemData as $key => $attr) {
         if (trim($attr) == '') continue;
 
         $attrData = explode(':', $attr);
         $label = $attrData[0];
         $value = $attrData[1];
-
         $attrInfo = getAttrInfo($label, $value, $sizeAttrNames);
 
-        $ord['super_attribute'][intval($attrInfo['labelId'])] = intval($attrInfo['valueId']);
+        $variantAttr['super_attribute'][intval($attrInfo['labelId'])] = intval($attrInfo['valueId']);
       }
     }
 
-    array_push($newOrder, $ord);
-  };
+    $product = Mage::getModel('catalog/product')->load($productId);
+    $quote->addProduct($product, new Varien_Object($variantAttr));
+  }
 
-  $orderCreated = false;
+  // add customer to quote
+  $quote->assignCustomer($_customer);
+
+  // guest only order
+  // $quote->setCustomerEmail("user@domain.net");
+
+  // set billing and shipping based ón customer defaults
+  $shippingDefault = $_customer->getDefaultShippingAddress();
+  $addressData = array(
+    'firstname' => $shippingDefault->getFirstname(),
+    'lastname' => $shippingDefault->getLastname(),
+    'street' => $shippingDefault->getStreet(),
+    'city' => $shippingDefault->getCity(),
+    'postcode' => $shippingDefault->getPostcode(),
+    'telephone' => $shippingDefault->getTelephone(),
+    'country_id' => $shippingDefault->getCountryId()
+  );
+  $quote->getBillingAddress()->addData($addressData);
+  $shippingAddress = $quote->getShippingAddress()->addData($addressData);
+
+  // shipping and payments method
+  $shippingAddress->setCollectShippingRates(true)
+    ->collectShippingRates()
+    ->setShippingMethod(SHIPPING_METHOD_CODE)
+    ->setPaymentMethod(PAYMENT_METHOD_CODE);
+  $quote->getPayment()->addData(array('method' => PAYMENT_METHOD_CODE));
+
+  // calulate totals and save
+  $quote->collectTotals();
+  $quote->save();
+  $quoteId = $quote->entity_id;
+  doLog('quote : '. $quoteId);
+
+  // post quote as a order
+  $service = Mage::getModel('sales/service_quote', $quote);
+  $service->submitAll();
+  $newOrder = $service->getOrder();
+  if (SEND_ORDER_MAIL) {
+    $newOrder->getSendConfirmation(null);
+    $newOrder->sendNewOrderEmail();
+    doLog('order mail sent');
+  } else {
+    doLog("order mail not sent, it's disabled");
+  }
+  doLog('order created id: '. $newOrder->getId());
+
+  // update klarna order with status created
   try {
-    $orderCreated = $orderGenerator->createOrder($newOrder);
+    $klarnaOrder->update(array('status' => 'created'));
   } catch (Exception $e) {
-    doLog("can't create order. Exception:". $e);
+    doLog('error getting order from klarna. Exception:', $e);
   }
-  if ($orderCreated) {
-    doLog('order created');
+  doLog('all done');
+  exit;
 
-    $update['status'] = 'created';
-    try {
-      $order->update($update);
-    } catch (Exception $e) {
-      doLog('error getting order from klarna. Exception:', $e);
-    }
-  }else{
-    doLog('something went wrong when creating order');
-  }
 } // end order proccess
 
 
