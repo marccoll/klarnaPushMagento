@@ -173,10 +173,10 @@ if ($klarnaOrder['status'] == 'created') {
   $shippingAddress = $quote->getShippingAddress()->addData($addressData);
 
   // shipping and payments method
-  $shippingAddress->setCollectShippingRates(true)
-    ->collectShippingRates()
-    ->setShippingMethod(SHIPPING_METHOD_CODE)
-    ->setPaymentMethod(PAYMENT_METHOD_CODE);
+  $shippingAddress->setShippingMethod(SHIPPING_METHOD_CODE)
+    ->setPaymentMethod(PAYMENT_METHOD_CODE)
+    ->setCollectShippingRates(true)
+    ->collectShippingRates();
   $quote->getPayment()->addData(array('method' => PAYMENT_METHOD_CODE));
 
   // calulate totals and save
