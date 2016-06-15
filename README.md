@@ -9,9 +9,9 @@ NOTES:
 - Check customer associate to website (maybe we could add reve)
 
 TODO:
-- Wrap script as magento module
-- Add config page in module
-- Add currency code
-- Add tax
-- Fix shipping method
-- Add support to different stores
+- [ ] Wrap script as magento module
+- [ ] Add config page in module
+- [ ] Add currency code
+- [x] Add tax
+- [x] Fix shipping method
+- [ ] Add support to different stores
