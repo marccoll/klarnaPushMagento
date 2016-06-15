@@ -22,15 +22,26 @@ if ($_GET['download-log'] == 'true') {
   exit;
 }
 
-$methods = Mage::getSingleton('shipping/config')->getActiveCarriers();
-
 echo '<strong>Shipping methods:</strong> <br>';
 
-foreach ($methods as $shippingCode => $shippingModel)
-{
-  $shippingTitle = Mage::getStoreConfig('carriers/'.$shippingCode.'/title');
-  echo  'code: ' .$shippingCode . '<br>';
-  echo 'title: ' . $shippingTitle . '<br><br>';
+$methods = Mage::getSingleton('shipping/config')->getActiveCarriers();
+
+foreach($methods as $_ccode => $_carrier){
+    $_methodOptions = array();
+    if($_methods = $_carrier->getAllowedMethods()){
+        if(!$_title = Mage::getStoreConfig("carriers/$_ccode/title"))
+            $_title = $_ccode;
+
+        echo 'title: ' . $_title . '<br>';
+
+        foreach($_methods as $_mcode => $_method){
+            $_code = $_ccode . '_' . $_mcode;
+            echo 'code: ' . $_code. '<br>';
+            echo 'method: ' . $_method . '<br />';
+        }
+
+        echo '<br />';
+    }
 }
 
 echo '<strong>Payment methods: </strong><br>';
