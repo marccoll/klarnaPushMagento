@@ -199,14 +199,14 @@ if ($klarnaOrder['status'] == 'created') {
     }
     doLog('order created id: '. $newOrder->getId());
   } catch (Exception $e) {
-    doLog('error submiting order. Exception:', $e);
+    doLog('error submiting order. Exception:'. $e);
   }
 
   // update klarna order with status created
   try {
     $klarnaOrder->update(array('status' => 'created'));
   } catch (Exception $e) {
-    doLog('error getting order from klarna. Exception:', $e);
+    doLog('error getting order from klarna. Exception:'. $e);
   }
   doLog('all done');
   exit;
