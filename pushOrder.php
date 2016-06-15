@@ -186,17 +186,21 @@ if ($klarnaOrder['status'] == 'created') {
   doLog('quote : '. $quoteId);
 
   // post quote as a order
-  $service = Mage::getModel('sales/service_quote', $quote);
-  $service->submitAll();
-  $newOrder = $service->getOrder();
-  if (SEND_ORDER_MAIL) {
-    $newOrder->getSendConfirmation(null);
-    $newOrder->sendNewOrderEmail();
-    doLog('order mail sent');
-  } else {
-    doLog("order mail not sent, it's disabled");
+  try{
+    $service = Mage::getModel('sales/service_quote', $quote);
+    $service->submitAll();
+    $newOrder = $service->getOrder();
+    if (SEND_ORDER_MAIL) {
+      $newOrder->getSendConfirmation(null);
+      $newOrder->sendNewOrderEmail();
+      doLog('order mail sent');
+    } else {
+      doLog("order mail not sent, it's disabled");
+    }
+    doLog('order created id: '. $newOrder->getId());
+  } catch (Exception $e) {
+    doLog('error submiting order. Exception:', $e);
   }
-  doLog('order created id: '. $newOrder->getId());
 
   // update klarna order with status created
   try {
