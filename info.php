@@ -6,6 +6,22 @@ require_once MAGE_PATH;
 umask(0);
 Mage::app('default');
 
+if ($_GET['download-log'] == 'true') {
+  $file = Mage::getBaseDir() . '/var/log/klarna-pushorder.log';
+  header('Content-Description: File Transfer');
+  header('Content-Type: application/octet-stream');
+  header('Content-Disposition: attachment; filename='.basename($file));
+  header('Content-Transfer-Encoding: binary');
+  header('Expires: 0');
+  header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+  header('Pragma: public');
+  header('Content-Length: ' . filesize($file));
+  ob_clean();
+  flush();
+  readfile($file);
+  exit;
+}
+
 $methods = Mage::getSingleton('shipping/config')->getActiveCarriers();
 
 echo '<strong>Shipping methods:</strong> <br>';
@@ -27,6 +43,10 @@ foreach ($payments as $paymentCode=>$paymentModel) {
   echo 'title: ' . $paymentTitle . '<br><br>';
 }
 
+$sendConfirmationMail = Mage::getStoreConfig('sales_email')['order']['enabled'] == 1;
+echo 'send confirmations: '. $sendConfirmationMail .'<br>';
+
+echo '<hr>';
 
 // get order info
 $orderID = $_GET['klarna_order'];
