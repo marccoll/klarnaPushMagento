@@ -178,7 +178,7 @@ if ($klarnaOrder['status'] == 'created') {
     ->setCollectShippingRates(true)
     ->collectShippingRates();
   $quote->getPayment()->addData(array('method' => PAYMENT_METHOD_CODE));
-  $quote->getPayment()->setAdditionalInformation(array('klarna_order_id' => KLARNA_ORDER_ID));
+  $quote->getPayment()->setAdditionalInformation(array('klarna_order_id' => KLARNA_ORDER_ID,'klarna_order_reservation' => $klarnaOrder['reservation']));
 
   // calulate totals and save
   $quote->collectTotals();
