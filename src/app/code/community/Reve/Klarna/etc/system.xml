@@ -38,6 +38,52 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                         </active>
+
+                        <klarna_env translate="label comment">
+                            <label>Klarna Environment</label>
+                            <frontend_type>text</frontend_type>
+                            <comment>Please specify env.: "test" or "production", etc.</comment>
+                            <sort_order>55</sort_order>
+                            <source_model>adminhtml/system_config_source_enabledisable</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <frontend_class>required-entry</frontend_class>
+                        </klarna_env>
+
+                        <klarna_secret translate="label comment">
+                            <label>Klarna Secret</label>
+                            <frontend_type>text</frontend_type>
+                            <comment>Please specify set of secret symbols to connect to Klarna server</comment>
+                            <sort_order>56</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <frontend_class>required-entry</frontend_class>
+                        </klarna_secret>
+
+                        <klarna_attr_names translate="label comment">
+                            <label>Product attributes names</label>
+                            <frontend_type>text</frontend_type>
+                            <comment>Coma separated attribute names for Klarna</comment>
+                            <sort_order>57</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <frontend_class>required-entry</frontend_class>
+                        </klarna_attr_names>
+
+                        <!--<length translate="label comment">-->
+                            <!--<label>Number of Symbols</label>-->
+                            <!--<frontend_type>text</frontend_type>-->
+                            <!--<comment>Please specify 8 symbols at the most. Range allowed (e.g. 3-5)</comment>-->
+                            <!--<sort_order>7</sort_order>-->
+                            <!--<show_in_default>1</show_in_default>-->
+                            <!--<show_in_website>0</show_in_website>-->
+                            <!--<show_in_store>0</show_in_store>-->
+                            <!--<depends><enable>1</enable></depends>-->
+                            <!--<frontend_class>required-entry</frontend_class>-->
+                        <!--</length>-->
                     </fields>
                 </general>
             </groups>

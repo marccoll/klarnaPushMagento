@@ -9,7 +9,18 @@
  */
 class Reve_Klarna_Helper_Data extends Mage_Core_Helper_Abstract
 {
-    public function getIsEnabled(){
-        return Mage::getStoreConfigFlag('reve/general/active');
+    public function getIsEnabled()
+    {
+        return Mage::getStoreConfigFlag('revetab/general/active');
+    }
+
+    public function getKlarnaAttrNames()
+    {
+        $attrNames = Mage::getStoreConfigFlag('revetab/general/klarna_attr_names');
+        if (!empty($attrNames)) {
+            $attrNames = implode(",",$attrNames);
+        }
+
+        return $attrNames;
     }
 }
