@@ -24,11 +24,15 @@ class Reve_Klarna_OrderController extends Mage_Checkout_Controller_Action
 
     public function indexAction()
     {
+        $response = ['status' => 'SUCCESS'];
+
         if ($this->_getHelper()->getIsEnabled()) {
             # get URL parameters
             $klarnaOrderId = $this->getRequest()->getParam('klarna_order');
             $storeID = $this->getRequest()->getParam('storeID');
-            Mage::app()->setCurrentStore($storeID);
+            if ($storeID > 0) {
+                Mage::app()->setCurrentStore($storeID);
+            }
 
             $reveOrder = Mage::getModel("klarna/order");
 
@@ -48,13 +52,22 @@ class Reve_Klarna_OrderController extends Mage_Checkout_Controller_Action
             try {
                 $klarnaOrder->fetch();
             } catch (Exception $e) {
+                Mage::log("Error on klarna connection (see exception.log)",null,"klarna-checkout.log");
                 Mage::logException($e);
+
+                $response['status'] = 'ERROR';
+                $response['message'] = $this->__("Error on klarna connection:".$e->getMessage());
+                $this->getResponse()->clearHeaders()->setHeader('Content-Type', 'application/json')->setBody(Mage::helper('core')->jsonEncode($response));
+                return;
             }
 
             if ($klarnaOrder['status'] == 'created') {
-                // todo: if Order already created, say something
-
                 Mage::log("Klarna Order ($klarnaOrderId) already exist!", null, "klarna-pushorder.log");
+
+                $response['status'] = 'ERROR';
+                $response['message'] = $this->__("Klarna Order ($klarnaOrderId) already exist!");
+                $this->getResponse()->clearHeaders()->setHeader('Content-Type', 'application/json')->setBody(Mage::helper('core')->jsonEncode($response));
+                return;
             } else {
                 // match klarna data with magento structure
                 $user = $klarnaOrder['shipping_address']; // Klarna user, not Magento structure
@@ -109,18 +122,23 @@ class Reve_Klarna_OrderController extends Mage_Checkout_Controller_Action
                 } catch (Exception $e) {
                     Mage::log("error getting order from klarna. (see exception.log)", null, "klarna-pushorder.log");
                     Mage::logException($e);
+
+                    $response['status'] = 'ERROR';
+                    $response['message'] = $this->__("Error getting order from klarna. (see exception.log):".$e->getMessage());
+                    $this->getResponse()->clearHeaders()->setHeader('Content-Type', 'application/json')->setBody(Mage::helper('core')->jsonEncode($response));
+                    return;
                 }
                 Mage::log("Successfully done!", null, "klarna-pushorder.log");
             }
         } else {
-            // todo: if not Enabled, say something
-
             Mage::log("Module is Disabled!", null, "klarna-pushorder.log");
+
+            //Mage::getSingleton('core/session')->addError("ReveApp Klarna module is disabled!");
+
+            $response['status'] = 'ERROR';
+            $response['message'] = $this->__("Error: Module is Disabled!");
         }
 
-        $this->loadLayout();
-        $this->_initLayoutMessages('customer/session');
-        $this->getLayout()->getBlock('head')->setTitle($this->__('Klarna pushing order'));
-        $this->renderLayout();
+        $this->getResponse()->clearHeaders()->setHeader('Content-Type', 'application/json')->setBody(Mage::helper('core')->jsonEncode($response));
     }
 }
