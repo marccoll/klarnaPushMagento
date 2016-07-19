@@ -28,6 +28,7 @@ class Reve_Klarna_OrderController extends Mage_Checkout_Controller_Action
             # get URL parameters
             $klarnaOrderId = $this->getRequest()->getParam('klarna_order');
             $storeID = $this->getRequest()->getParam('storeID');
+            Mage::app()->setCurrentStore($storeID);
 
             $reveOrder = Mage::getModel("klarna/order");
 
@@ -43,16 +44,78 @@ class Reve_Klarna_OrderController extends Mage_Checkout_Controller_Action
             );
 
             // fetch klarna order
-            $klarnaOrder = new Klarna_Checkout_Order($connector, KLARNA_ORDER_ID);
+            $klarnaOrder = new Klarna_Checkout_Order($connector, $klarnaOrderId);
             try {
                 $klarnaOrder->fetch();
-                #doLog('klarna order fetched');
             } catch (Exception $e) {
-                #doLog('error on klarna connection. Exception:'. $e);
-                #exit;
+                Mage::logException($e);
+            }
+
+            if ($klarnaOrder['status'] == 'created') {
+                // todo: if Order already created, say something
+
+                Mage::log("Klarna Order ($klarnaOrderId) already exist!", null, "klarna-pushorder.log");
+            } else {
+                // match klarna data with magento structure
+                $user = $klarnaOrder['shipping_address']; // Klarna user, not Magento structure
+                $cart = $klarnaOrder['cart']['items']; // Klarna cart, not Magento structure
+
+                $_customer = Mage::getModel("klarna/customer");
+                $_customer->assignKlarnaData($user);
+
+                // create sales quote
+                $quote = $this->_getHelper()->_getQuote();
+                if ($storeID) {
+                    $quote->setStoreId($storeID);
+                } else {
+                    $quote->setStoreId(Mage::app()->getStore('default')->getId());
+                }
+
+
+                try{
+                    // add cart to quote
+                    $reveOrder->pushKlarnaCartToQuote($cart);
+
+                    // add customer to quote
+                    $quote->assignCustomer($_customer);
+
+                    $reveOrder->saveQuote($_customer, ['id'=>$klarnaOrderId, 'reservation'=>$klarnaOrder['reservation']]);
+
+                    Mage::log('quote : '. $quote->getId(), null, "klarna-pushorder.log");
+
+                    // post quote as an order
+                    $service = Mage::getModel('sales/service_quote', $quote);
+                    $service->submitAll();
+                    $newOrder = $service->getOrder();
+
+                    Mage::log("Order created ID: ". $newOrder->getId(), null, "klarna-pushorder.log");
+
+                    if (Mage::getStoreConfig('sales_email')['order']['enabled'] == 1) {
+                        $newOrder->getSendConfirmation(null);
+                        $newOrder->sendNewOrderEmail();
+
+                        Mage::log("Order mail sent", null, "klarna-pushorder.log");
+
+                    } else {
+                        Mage::log("Order mail not sent, it's disabled", null, "klarna-pushorder.log");
+                    }
+                } catch (Exception $e) {
+                    Mage::logException($e);
+                }
+
+                // update klarna order with status created
+                try {
+                    $klarnaOrder->update(array('status' => 'created'));
+                } catch (Exception $e) {
+                    Mage::log("error getting order from klarna. (see exception.log)", null, "klarna-pushorder.log");
+                    Mage::logException($e);
+                }
+                Mage::log("Successfully done!", null, "klarna-pushorder.log");
             }
         } else {
             // todo: if not Enabled, say something
+
+            Mage::log("Module is Disabled!", null, "klarna-pushorder.log");
         }
 
         $this->loadLayout();
