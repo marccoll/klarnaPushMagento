@@ -30,20 +30,22 @@ class Reve_Klarna_OrderController extends Mage_Checkout_Controller_Action
             # get URL parameters
             $klarnaOrderId = $this->getRequest()->getParam('klarna_order');
             $storeID = $this->getRequest()->getParam('storeID');
-            if ($storeID > 0) {
-                Mage::app()->setCurrentStore($storeID);
+            if ($storeID <= 0) {
+                $storeID = 1;
             }
+
+            Mage::app()->setCurrentStore($storeID);
 
             $reveOrder = Mage::getModel("klarna/order");
 
             // Klarna setup
             $klarnaUrl = Klarna_Checkout_Connector::BASE_URL;
-            if (Mage::getStoreConfigFlag('revetab/general/klarna_env') == 'test') {
+            if (Mage::getStoreConfig('revetab/general/klarna_env', $storeID) == 'test') {
                 $klarnaUrl = Klarna_Checkout_Connector::BASE_TEST_URL;
             }
 
             $connector = Klarna_Checkout_Connector::create(
-                Mage::getStoreConfigFlag('revetab/general/klarna_secret'),
+                Mage::getStoreConfig('revetab/general/klarna_secret', $storeID),
                 $klarnaUrl
             );
 
@@ -87,7 +89,7 @@ class Reve_Klarna_OrderController extends Mage_Checkout_Controller_Action
 
                 try{
                     // add cart to quote
-                    $reveOrder->pushKlarnaCartToQuote($cart);
+                    $reveOrder->pushKlarnaCartToQuote($cart, $storeID);
 
                     // add customer to quote
                     $quote->assignCustomer($_customer);
@@ -113,7 +115,13 @@ class Reve_Klarna_OrderController extends Mage_Checkout_Controller_Action
                         Mage::log("Order mail not sent, it's disabled", null, "klarna-pushorder.log");
                     }
                 } catch (Exception $e) {
+                    Mage::log("Error pushing order (see exception.log)",null,"klarna-checkout.log");
                     Mage::logException($e);
+
+                    $response['status'] = 'ERROR';
+                    $response['message'] = $this->__("Error pushing order:".$e->getMessage());
+                    $this->getResponse()->clearHeaders()->setHeader('Content-Type', 'application/json')->setBody(Mage::helper('core')->jsonEncode($response));
+                    return;
                 }
 
                 // update klarna order with status created
@@ -132,8 +140,6 @@ class Reve_Klarna_OrderController extends Mage_Checkout_Controller_Action
             }
         } else {
             Mage::log("Module is Disabled!", null, "klarna-pushorder.log");
-
-            //Mage::getSingleton('core/session')->addError("ReveApp Klarna module is disabled!");
 
             $response['status'] = 'ERROR';
             $response['message'] = $this->__("Error: Module is Disabled!");

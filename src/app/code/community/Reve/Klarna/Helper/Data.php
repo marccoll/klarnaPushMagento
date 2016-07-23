@@ -27,8 +27,12 @@ class Reve_Klarna_Helper_Data extends Mage_Core_Helper_Abstract
     function getAttrInfo($label, $value, $sizeAttrNames){
         $attrInfo = array();
 
-        if (is_string($sizeAttrNames) && preg_match(",",$sizeAttrNames)) {
+        if (is_string($sizeAttrNames) && preg_match("/,/",$sizeAttrNames)) {
             $sizeAttrNames = explode(',',$sizeAttrNames);
+        }
+
+        if (!is_array($sizeAttrNames)) {
+            $sizeAttrNames = [$sizeAttrNames];
         }
 
         if($label == 'size'){

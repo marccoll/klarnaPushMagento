@@ -14,7 +14,7 @@ class Reve_Klarna_Model_Order extends Mage_Sales_Model_Order
 
     protected $sizeAttrNames = ['size'];
 
-    public function pushKlarnaCartToQuote($cart)
+    public function pushKlarnaCartToQuote($cart, $storeId = null)
     {
         $quote = Mage::helper("klarna")->_getQuote();
         // add item to quote
@@ -35,7 +35,7 @@ class Reve_Klarna_Model_Order extends Mage_Sales_Model_Order
                     $attrData = explode(':', $attr);
                     $label = $attrData[0];
                     $value = $attrData[1];
-                    $attrInfo = $this->_getHelper()->getAttrInfo($label, $value, Mage::getStoreConfigFlag("revetab/general/klarna_attr_names"));
+                    $attrInfo = Mage::helper('klarna')->getAttrInfo($label, $value, Mage::getStoreConfig("revetab/general/klarna_attr_names"));
 
                     $variantAttr['super_attribute'][intval($attrInfo['labelId'])] = intval($attrInfo['valueId']);
                 }
