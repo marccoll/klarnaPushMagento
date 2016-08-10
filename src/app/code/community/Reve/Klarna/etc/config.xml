@@ -23,17 +23,17 @@
     <!--</frontend>-->
 
     <global>
-        <!--<events>-->
-            <!--<sales_order_place_after>-->
-                <!--<observers>-->
-                    <!--<reve_klarna_model_observer_push_order>-->
-                        <!--<type>singleton</type>-->
-                        <!--<class>Reve_Klarna_Model_Observer</class>-->
-                        <!--<method>pushOrder</method>-->
-                    <!--</reve_klarna_model_observer_push_order>-->
-                <!--</observers>-->
-            <!--</sales_order_place_after>-->
-        <!--</events>-->
+        <events>
+            <order_cancel_after>
+                <observers>
+                    <reve_klarna_model_observer_cancel_order>
+                        <type>singleton</type>
+                        <class>Reve_Klarna_Model_Observer</class>
+                        <method>cancelOrder</method>
+                    </reve_klarna_model_observer_cancel_order>
+                </observers>
+            </order_cancel_after>
+        </events>
         <models>
             <klarna>
                 <class>Reve_Klarna_Model</class>

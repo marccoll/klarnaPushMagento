@@ -50,17 +50,33 @@ class Reve_Klarna_Model_Order extends Mage_Sales_Model_Order
     {
         $quote = Mage::helper("klarna")->_getQuote();
 
-        // set billing and shipping based ón customer defaults
+        // set billing and shipping based on customer defaults
         $shippingDefault = $_customer->getDefaultShippingAddress();
-        $addressData = array(
-            'firstname' => $shippingDefault->getFirstname(),
-            'lastname' => $shippingDefault->getLastname(),
-            'street' => $shippingDefault->getStreet(),
-            'city' => $shippingDefault->getCity(),
-            'postcode' => $shippingDefault->getPostcode(),
-            'telephone' => $shippingDefault->getTelephone(),
-            'country_id' => $shippingDefault->getCountryId()
-        );
+
+        if (!is_object($shippingDefault)) {
+            $address = $quote->getCustomer()->getAddressesCollection()->getFirstItem()->getData();
+
+            $addressData = array(
+                'firstname' => $address['firstname'],
+                'lastname' => $address['lastname'],
+                'street' => $address['street'],
+                'city' => $address['city'],
+                'postcode' => $address['postcode'],
+                'telephone' => $address['telephone'],
+                'country_id' => $address['country_id']
+            );
+        } else {
+            $addressData = array(
+                'firstname' => $shippingDefault->getFirstname(),
+                'lastname' => $shippingDefault->getLastname(),
+                'street' => $shippingDefault->getStreet(),
+                'city' => $shippingDefault->getCity(),
+                'postcode' => $shippingDefault->getPostcode(),
+                'telephone' => $shippingDefault->getTelephone(),
+                'country_id' => $shippingDefault->getCountryId()
+            );
+        }
+
         $quote->getBillingAddress()->addData($addressData);
         $shippingAddress = $quote->getShippingAddress()->addData($addressData);
 
