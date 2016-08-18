@@ -7,7 +7,7 @@ umask(0);
 Mage::app('default');
 
 if ($_GET['download-log'] == 'true') {
-  $file = Mage::getBaseDir() . '/var/log/klarna-pushorder.log';
+  $file = Mage::getBaseDir() . '/var/log/klarnapushorder-checkout.log';
   header('Content-Description: File Transfer');
   header('Content-Type: application/octet-stream');
   header('Content-Disposition: attachment; filename='.basename($file));
@@ -56,6 +56,11 @@ foreach ($payments as $paymentCode=>$paymentModel) {
 
 $sendConfirmationMail = Mage::getStoreConfig('sales_email')['order']['enabled'] == 1;
 echo 'send confirmations: '. $sendConfirmationMail .'<br>';
+
+$klarnaServer = Mage::getStoreConfig('payment/klarnaCheckout_payment/server');
+$klarnaSecret = Mage::helper('core')->decrypt(Mage::getStoreConfig('payment/klarnaCheckout_payment/sharedsecret'));
+echo 'klarna server: '. $klarnaServer .'<br>';
+echo 'klarna secret: '. $klarnaSecret .'<br>';
 
 echo '<hr>';
 

@@ -39,28 +39,6 @@
                             <show_in_store>1</show_in_store>
                         </active>
 
-                        <klarna_env translate="label comment">
-                            <label>Klarna Environment</label>
-                            <frontend_type>text</frontend_type>
-                            <comment>Please specify env.: "test" or "production", etc.</comment>
-                            <sort_order>55</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <frontend_class>required-entry</frontend_class>
-                        </klarna_env>
-
-                        <klarna_secret translate="label comment">
-                            <label>Klarna Secret</label>
-                            <frontend_type>text</frontend_type>
-                            <comment>Please specify set of secret symbols to connect to Klarna server</comment>
-                            <sort_order>56</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <frontend_class>required-entry</frontend_class>
-                        </klarna_secret>
-
                         <klarna_attr_names translate="label comment">
                             <label>Product attributes names</label>
                             <frontend_type>text</frontend_type>

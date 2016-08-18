@@ -41,14 +41,22 @@ class Reve_KlarnaPushOrder_OrderController extends Mage_Checkout_Controller_Acti
 
             $reveOrder = Mage::getModel("klarnapushorder/order");
 
+            // Avenla module settings
+            $klarnaServer = Mage::getStoreConfig('payment/klarnaCheckout_payment/server');
+            $klarnaSecret = Mage::helper('core')->decrypt(Mage::getStoreConfig('payment/klarnaCheckout_payment/sharedsecret'));
+
+            // Klarna Official settings
+            if (!$klarnaServer) $klarnaServer = Mage::getStoreConfig('payment/vaimo_klarna_checkout/host');
+            if (!$klarnaSecret) $klarnaSecret = Mage::getStoreConfig('payment/vaimo_klarna_checkout/shared_secret');
+
             // Klarna setup
             $klarnaUrl = Klarna_Checkout_Connector::BASE_URL;
-            if (Mage::getStoreConfig('revetab/general/klarna_env', $storeID) == 'test') { // TODO: read from Klarna modules
+            if ( in_array(strtolower($klarnaServer), ['demo', 'test', 'testdrive', 'beta']) ) {
                 $klarnaUrl = Klarna_Checkout_Connector::BASE_TEST_URL;
             }
 
             $connector = Klarna_Checkout_Connector::create(
-                Mage::getStoreConfig('revetab/general/klarna_secret', $storeID), // TODO: read from Klarna modules
+                $klarnaSecret,
                 $klarnaUrl
             );
 

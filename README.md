@@ -15,5 +15,5 @@ TODO:
 - [x] Add tax
 - [x] Fix shipping method
 - [ ] Add support to different stores
-- [x] Support Avenla_KlarnaCheckout 1.2.1 and Klarna Official module
+- [x] Support Avenla_KlarnaCheckout 1.2.1 and Klarna Official module (klarnapayments 5.3.55)
 
