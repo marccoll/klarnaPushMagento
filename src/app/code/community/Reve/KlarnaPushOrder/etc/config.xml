@@ -7,9 +7,9 @@
 -->
 <config>
     <modules>
-        <Reve_Klarna>
+        <Reve_KlarnaPushOrder>
             <version>1.0.0</version>
-        </Reve_Klarna>
+        </Reve_KlarnaPushOrder>
     </modules>
 
     <!--<frontend>-->
@@ -28,7 +28,7 @@
                 <observers>
                     <reve_klarna_model_observer_cancel_order>
                         <type>singleton</type>
-                        <class>Reve_Klarna_Model_Observer</class>
+                        <class>Reve_KlarnaPushOrder_Model_Observer</class>
                         <method>cancelOrder</method>
                     </reve_klarna_model_observer_cancel_order>
                 </observers>
@@ -36,12 +36,12 @@
         </events>
         <models>
             <klarna>
-                <class>Reve_Klarna_Model</class>
+                <class>Reve_KlarnaPushOrder_Model</class>
             </klarna>
         </models>
         <helpers>
             <klarna>
-                <class>Reve_Klarna_Helper</class>
+                <class>Reve_KlarnaPushOrder_Helper</class>
             </klarna>
         </helpers>
     </global>
@@ -50,18 +50,18 @@
             <klarna>
                 <use>standard</use>
                 <args>
-                    <module>Reve_Klarna</module>
+                    <module>Reve_KlarnaPushOrder</module>
                     <frontName>klarna</frontName>
                 </args>
             </klarna>
         </routers>
         <translate>
             <modules>
-                <Reve_Klarna>
+                <Reve_KlarnaPushOrder>
                     <files>
                         <default>Reve_Klarna.csv</default>
                     </files>
-                </Reve_Klarna>
+                </Reve_KlarnaPushOrder>
             </modules>
         </translate>
     </frontend>

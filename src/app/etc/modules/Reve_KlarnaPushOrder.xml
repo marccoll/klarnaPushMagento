@@ -7,9 +7,9 @@
 -->
 <config>
     <modules>
-        <Reve_Klarna>
+        <Reve_KlarnaPushOrder>
             <active>true</active>
             <codePool>community</codePool>
-        </Reve_Klarna>
+        </Reve_KlarnaPushOrder>
     </modules>
 </config>

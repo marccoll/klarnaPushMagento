@@ -7,7 +7,7 @@
  * Description  : helper of Reve_Klarna module
  * Checks if module available & enabled in CMS
  */
-class Reve_Klarna_Helper_Data extends Mage_Core_Helper_Abstract
+class Reve_KlarnaPushOrder_Helper_Data extends Mage_Core_Helper_Abstract
 {
     public function getIsEnabled()
     {

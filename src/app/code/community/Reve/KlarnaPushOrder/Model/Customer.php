@@ -7,7 +7,7 @@
  * Time         : 12:03
  * Description  :
  */
-class Reve_Klarna_Model_Customer extends Mage_Customer_Model_Customer
+class Reve_KlarnaPushOrder_Model_Customer extends Mage_Customer_Model_Customer
 {
     public function assignKlarnaData($user)
     {

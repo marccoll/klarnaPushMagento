@@ -10,7 +10,7 @@ require_once 'Klarna/Checkout.php';
  * or
  * http[s]://www.your_lovely_shop.tld/klarna/order/index/klarna_order/NNNN/storeID/MM
  */
-class Reve_Klarna_OrderController extends Mage_Checkout_Controller_Action
+class Reve_KlarnaPushOrder_OrderController extends Mage_Checkout_Controller_Action
 {
     /**
      * Retrieve Reve_Klarna Helper
@@ -19,7 +19,7 @@ class Reve_Klarna_OrderController extends Mage_Checkout_Controller_Action
      */
     protected function _getHelper()
     {
-        return Mage::helper('klarna');
+        return Mage::helper('klarnapushorder');
     }
 
     public function indexAction()
@@ -102,6 +102,16 @@ class Reve_Klarna_OrderController extends Mage_Checkout_Controller_Action
                     $service = Mage::getModel('sales/service_quote', $quote);
                     $service->submitAll();
                     $newOrder = $service->getOrder();
+
+                    // generate a auth transaction, needed for Klarna Offical Module
+                    $payment = $newOrder->getPayment();
+                    $payment->setTransactionId( $klarnaOrder['reservation'] )
+                      ->setIsTransactionClosed(0)
+                      ->setStatus(Mage_Payment_Model_Method_Abstract::STATUS_APPROVED);
+                    if ($transaction = $payment->addTransaction(Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH)) {
+                      $transaction->save();
+                    }
+                    $payment->save();
 
                     Mage::log("Order created ID: ". $newOrder->getId(), null, "klarna-pushorder.log");
 

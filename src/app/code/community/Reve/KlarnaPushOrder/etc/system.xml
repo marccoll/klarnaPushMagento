@@ -14,7 +14,7 @@
     </tabs>
     <sections>
         <revetab translate="label" module="adminhtml">
-            <label>Klarna PushOrder</label>
+            <label>Reve Klarna PushOrder</label>
             <tab>klarnapushorder</tab>
             <sort_order>10</sort_order>
             <show_in_default>1</show_in_default>

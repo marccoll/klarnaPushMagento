@@ -7,10 +7,14 @@
  * Time         : 23:16
  * Description  :
  */
-class Reve_Klarna_Model_Order extends Mage_Sales_Model_Order
+class Reve_KlarnaPushOrder_Model_Order extends Mage_Sales_Model_Order
 {
-    const SHIPPING_METHOD_CODE = 'flatrate_flatrate';
-    const PAYMENT_METHOD_CODE = 'checkmo';
+  const SHIPPING_METHOD_CODE = 'flatrate_flatrate';
+
+  // Payment methods:
+  // vaimo_klarna_checkout = Klarna Official
+  // klarnaCheckout_payment = Avenla module
+  const PAYMENT_METHOD_CODE = 'vaimo_klarna_checkout'; // TODO: should be autodetected based on installed module or overide using magento admin
 
     protected $sizeAttrNames = ['size'];
 
@@ -86,7 +90,18 @@ class Reve_Klarna_Model_Order extends Mage_Sales_Model_Order
             ->setCollectShippingRates(true)
             ->collectShippingRates();
         $quote->getPayment()->addData(array('method' => self::PAYMENT_METHOD_CODE));
-        $quote->getPayment()->setAdditionalInformation(array('klarna_order_id' => $klarna_order['id'],'klarna_order_reservation' => $klarna_order['reservation']));
+
+        $quote->getPayment()->setAdditionalInformation(array(
+
+          // Avenla module support
+          'klarna_order_id' => $klarna_order['id'],
+          'klarna_order_reservation' => $klarna_order['reservation'],
+
+          // Klarna Official module support (also need to set a AUTH transaction, see order save)
+          'klarna_reservation_reference' => $klarna_order['id'],
+          'klarna_reservation_id' => $klarna_order['reservation']
+
+        ));
 
         // calculate totals and save
         $quote->collectTotals();
