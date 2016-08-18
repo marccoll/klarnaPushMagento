@@ -58,9 +58,19 @@ $sendConfirmationMail = Mage::getStoreConfig('sales_email')['order']['enabled'] 
 echo 'send confirmations: '. $sendConfirmationMail .'<br>';
 
 $klarnaServer = Mage::getStoreConfig('payment/klarnaCheckout_payment/server');
+if (!$klarnaServer) $klarnaServer = Mage::getStoreConfig('payment/vaimo_klarna_checkout/host');
+
 $klarnaSecret = Mage::helper('core')->decrypt(Mage::getStoreConfig('payment/klarnaCheckout_payment/sharedsecret'));
+if (!$klarnaSecret) $klarnaSecret = Mage::getStoreConfig('payment/vaimo_klarna_checkout/shared_secret');
+
 echo 'klarna server: '. $klarnaServer .'<br>';
-echo 'klarna secret: '. $klarnaSecret .'<br>';
+echo 'klarna secret: ';
+if ($klarnaSecret) {
+  echo 'got it!';
+} else {
+  echo '<span style="color:red;">MISSING</span>';
+}
+echo '<br>';
 
 echo '<hr>';
 
@@ -75,7 +85,6 @@ if ($magOrderId) {
   // echo "Payment:";
   // echo htmlentities( print_r($magOrder->getPayment(), true) );
   echo "</pre>";
-  echo '<hr>';
 }
 
 // get order info
