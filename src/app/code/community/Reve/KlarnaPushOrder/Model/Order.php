@@ -59,6 +59,11 @@ class Reve_KlarnaPushOrder_Model_Order extends Mage_Sales_Model_Order
                 }
             }
 
+            // Is it not better if we load product by SKU?
+            // that way we might support stores that do not have the feed module installed, if we get SKU from scrape/other feed.
+            // $product = Mage::getModel('catalog/product');
+            // $product->load($product->getIdBySku($prod['reference']));
+
             $product = Mage::getModel('catalog/product')->load($productId);
             $quote->addProduct($product, new Varien_Object($variantAttr));
         }
