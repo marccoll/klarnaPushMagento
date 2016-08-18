@@ -178,7 +178,18 @@ if ($klarnaOrder['status'] == 'created') {
     ->setCollectShippingRates(true)
     ->collectShippingRates();
   $quote->getPayment()->addData(array('method' => PAYMENT_METHOD_CODE));
-  $quote->getPayment()->setAdditionalInformation(array('klarna_order_id' => KLARNA_ORDER_ID,'klarna_order_reservation' => $klarnaOrder['reservation']));
+
+  $quote->getPayment()->setAdditionalInformation(array(
+
+    // Avenla module support
+    'klarna_order_id' => KLARNA_ORDER_ID,
+    'klarna_order_reservation' => $klarnaOrder['reservation'],
+
+    // Klarna Official module support (also need to set a AUTH transaction, see order save)
+    'klarna_reservation_reference' => KLARNA_ORDER_ID,
+    'klarna_reservation_id' => $klarnaOrder['reservation']
+
+  ));
 
     // calculate totals and save
     $quote->collectTotals();
@@ -191,6 +202,17 @@ if ($klarnaOrder['status'] == 'created') {
         $service = Mage::getModel('sales/service_quote', $quote);
         $service->submitAll();
         $newOrder = $service->getOrder();
+
+        // generate a auth transaction, needed for Klarna Offical Module
+        $payment = $newOrder->getPayment();
+        $payment->setTransactionId( $klarnaOrder['reservation'] )
+          ->setIsTransactionClosed(0)
+          ->setStatus(Mage_Payment_Model_Method_Abstract::STATUS_APPROVED);
+        if ($transaction = $payment->addTransaction(Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH)) {
+          $transaction->save();
+        }
+        $payment->save();
+
         if (SEND_ORDER_MAIL) {
             $newOrder->getSendConfirmation(null);
             $newOrder->sendNewOrderEmail();
