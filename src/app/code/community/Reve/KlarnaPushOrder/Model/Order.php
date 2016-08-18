@@ -14,7 +14,7 @@ class Reve_KlarnaPushOrder_Model_Order extends Mage_Sales_Model_Order
   // Payment methods:
   // vaimo_klarna_checkout = Klarna Official
   // klarnaCheckout_payment = Avenla module
-  const PAYMENT_METHOD_CODE = 'vaimo_klarna_checkout'; // TODO: should be autodetected based on installed module or overide using magento admin
+  const PAYMENT_METHOD_CODE = 'vaimo_klarna_checkout'; // TODO: should be autodetected based on installed module or override using magento admin
 
     protected $sizeAttrNames = ['size'];
 

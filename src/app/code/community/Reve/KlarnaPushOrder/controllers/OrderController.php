@@ -1,5 +1,4 @@
 <?php
-require_once 'Klarna/Checkout.php';
 /**
  * Created by   : Dmitry Shirokovskiy.
  * Email        : info@phpwebstudio.com
@@ -24,6 +23,7 @@ class Reve_KlarnaPushOrder_OrderController extends Mage_Checkout_Controller_Acti
 
     public function indexAction()
     {
+        require_once 'ReveKlarna/Checkout.php';
         $response = ['status' => 'SUCCESS'];
 
         if ($this->_getHelper()->getIsEnabled()) {
