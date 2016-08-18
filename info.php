@@ -59,6 +59,20 @@ echo 'send confirmations: '. $sendConfirmationMail .'<br>';
 
 echo '<hr>';
 
+// get magento order
+$magOrderId = $_GET['mag_order'];
+if ($magOrderId) {
+  echo '<strong>Magento order:</strong><br>';
+  $magOrder = Mage::getModel('sales/order')->loadByIncrementId( $magOrderId );
+  echo "<pre>";
+  echo "Additional:";
+  echo htmlentities( print_r($magOrder->getPayment()->getAdditionalInformation(), true) );
+  // echo "Payment:";
+  // echo htmlentities( print_r($magOrder->getPayment(), true) );
+  echo "</pre>";
+  echo '<hr>';
+}
+
 // get order info
 $orderID = $_GET['klarna_order'];
 if ($orderID) {
