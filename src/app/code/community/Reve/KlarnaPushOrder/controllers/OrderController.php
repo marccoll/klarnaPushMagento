@@ -36,6 +36,9 @@ class Reve_KlarnaPushOrder_OrderController extends Mage_Checkout_Controller_Acti
 
             Mage::app()->setCurrentStore($storeID);
 
+            Mage::log("-----------", null, "klarnapushorder-checkout.log");
+            Mage::log("Processing Klarna order:". $klarnaOrderId, null, "klarnapushorder-checkout.log");
+
             $reveOrder = Mage::getModel("klarnapushorder/order");
 
             // Klarna setup
@@ -60,15 +63,19 @@ class Reve_KlarnaPushOrder_OrderController extends Mage_Checkout_Controller_Acti
                 $response['status'] = 'ERROR';
                 $response['message'] = $this->__("Error on klarna connection:".$e->getMessage());
                 $this->getResponse()->clearHeaders()->setHeader('Content-Type', 'application/json')->setBody(Mage::helper('core')->jsonEncode($response));
+
+                Mage::log("-----------", null, "klarnapushorder-checkout.log");
                 return;
             }
 
             if ($klarnaOrder['status'] == 'created') {
-                Mage::log("Klarna Order ($klarnaOrderId) already exist!", null, "klarnapushorder-pushorder.log");
+                Mage::log("Klarna Order ($klarnaOrderId) already exist!", null, "klarnapushorder-checkout.log");
 
                 $response['status'] = 'ERROR';
                 $response['message'] = $this->__("Klarna Order ($klarnaOrderId) already exist!");
                 $this->getResponse()->clearHeaders()->setHeader('Content-Type', 'application/json')->setBody(Mage::helper('core')->jsonEncode($response));
+
+                Mage::log("-----------", null, "klarnapushorder-checkout.log");
                 return;
             } else {
                 // match klarna data with magento structure
@@ -96,7 +103,7 @@ class Reve_KlarnaPushOrder_OrderController extends Mage_Checkout_Controller_Acti
 
                     $reveOrder->saveQuote($_customer, ['id'=>$klarnaOrderId, 'reservation'=>$klarnaOrder['reservation']]);
 
-                    Mage::log('quote : '. $quote->getId(), null, "klarnapushorder-pushorder.log");
+                    Mage::log('quote : '. $quote->getId(), null, "klarnapushorder-checkout.log");
 
                     // post quote as an order
                     $service = Mage::getModel('sales/service_quote', $quote);
@@ -113,16 +120,16 @@ class Reve_KlarnaPushOrder_OrderController extends Mage_Checkout_Controller_Acti
                     }
                     $payment->save();
 
-                    Mage::log("Order created ID: ". $newOrder->getId(), null, "klarnapushorder-pushorder.log");
+                    Mage::log("Order created ID: ". $newOrder->getId(), null, "klarnapushorder-checkout.log");
 
                     if (Mage::getStoreConfig('sales_email')['order']['enabled'] == 1) {
                         $newOrder->getSendConfirmation(null);
                         $newOrder->sendNewOrderEmail();
 
-                        Mage::log("Order mail sent", null, "klarnapushorder-pushorder.log");
+                        Mage::log("Order mail sent", null, "klarnapushorder-checkout.log");
 
                     } else {
-                        Mage::log("Order mail not sent, it's disabled", null, "klarnapushorder-pushorder.log");
+                        Mage::log("Order mail not sent, it's disabled", null, "klarnapushorder-checkout.log");
                     }
                 } catch (Exception $e) {
                     Mage::log("Error pushing order (see exception.log)",null,"klarnapushorder-checkout.log");
@@ -131,6 +138,8 @@ class Reve_KlarnaPushOrder_OrderController extends Mage_Checkout_Controller_Acti
                     $response['status'] = 'ERROR';
                     $response['message'] = $this->__("Error pushing order:".$e->getMessage());
                     $this->getResponse()->clearHeaders()->setHeader('Content-Type', 'application/json')->setBody(Mage::helper('core')->jsonEncode($response));
+
+                    Mage::log("-----------", null, "klarnapushorder-checkout.log");
                     return;
                 }
 
@@ -138,23 +147,26 @@ class Reve_KlarnaPushOrder_OrderController extends Mage_Checkout_Controller_Acti
                 try {
                     $klarnaOrder->update(array('status' => 'created'));
                 } catch (Exception $e) {
-                    Mage::log("error getting order from klarna. (see exception.log)", null, "klarnapushorder-pushorder.log");
+                    Mage::log("error getting order from klarna. (see exception.log)", null, "klarnapushorder-checkout.log");
                     Mage::logException($e);
 
                     $response['status'] = 'ERROR';
                     $response['message'] = $this->__("Error getting order from klarna. (see exception.log):".$e->getMessage());
                     $this->getResponse()->clearHeaders()->setHeader('Content-Type', 'application/json')->setBody(Mage::helper('core')->jsonEncode($response));
+
+                    Mage::log("-----------", null, "klarnapushorder-checkout.log");
                     return;
                 }
-                Mage::log("Successfully done!", null, "klarnapushorder-pushorder.log");
+                Mage::log("Successfully done!", null, "klarnapushorder-checkout.log");
             }
         } else {
-            Mage::log("Module is Disabled!", null, "klarnapushorder-pushorder.log");
+            Mage::log("Module is Disabled!", null, "klarnapushorder-checkout.log");
 
             $response['status'] = 'ERROR';
             $response['message'] = $this->__("Error: Module is Disabled!");
         }
 
+        Mage::log("-----------", null, "klarnapushorder-checkout.log");
         $this->getResponse()->clearHeaders()->setHeader('Content-Type', 'application/json')->setBody(Mage::helper('core')->jsonEncode($response));
     }
 }

@@ -18,6 +18,6 @@ class Reve_KlarnaPushOrder_Model_Observer extends Varien_Event_Observer
 
         # Get Order 
         $order = $observer->getEvent()->getOrder();
-        Mage::log("cancelOrder(".$order->getId().")", null, 'klarnapushorder-pushorder.log', true);
+        Mage::log("cancelOrder(".$order->getId().")", null, 'klarnapushorder-checkout.log', true);
     }
 }
