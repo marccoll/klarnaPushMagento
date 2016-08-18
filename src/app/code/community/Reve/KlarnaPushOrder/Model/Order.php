@@ -11,16 +11,30 @@ class Reve_KlarnaPushOrder_Model_Order extends Mage_Sales_Model_Order
 {
   const SHIPPING_METHOD_CODE = 'flatrate_flatrate';
 
-  // Payment methods:
-  // vaimo_klarna_checkout = Klarna Official
-  // klarnaCheckout_payment = Avenla module
-  const PAYMENT_METHOD_CODE = 'vaimo_klarna_checkout'; // TODO: should be autodetected based on installed module or override using magento admin
-
     protected $sizeAttrNames = ['size'];
+
+    public function getPaymentMethodCode()
+    {
+      $payments = Mage::getSingleton('payment/config')->getActiveMethods();
+
+      // Supported Payment methods:
+      // vaimo_klarna_checkout = Klarna Official
+      // klarnaCheckout_payment = Avenla module
+      $supportedMethods = ['vaimo_klarna_checkout', 'klarnaCheckout_payment']; // TODO: maybe allow to add additional in config?
+
+      foreach ($payments as $paymentCode=>$paymentModel) {
+        $paymentTitle = Mage::getStoreConfig('payment/'.$paymentCode.'/title');
+        if ( in_array($paymentCode, $supportedMethods) ) {
+          // return first match, as stores should just have one of the Klarna modules installed
+          return $paymentCode;
+        }
+      }
+      // TODO: thow a exception, no supported method
+    }
 
     public function pushKlarnaCartToQuote($cart, $storeId = null)
     {
-        $quote = Mage::helper("klarna")->_getQuote();
+        $quote = Mage::helper("klarnapushorder")->_getQuote();
         // add item to quote
         foreach ($cart as $key => $prod) {
             // load product
@@ -39,7 +53,7 @@ class Reve_KlarnaPushOrder_Model_Order extends Mage_Sales_Model_Order
                     $attrData = explode(':', $attr);
                     $label = $attrData[0];
                     $value = $attrData[1];
-                    $attrInfo = Mage::helper('klarna')->getAttrInfo($label, $value, Mage::getStoreConfig("revetab/general/klarna_attr_names"));
+                    $attrInfo = Mage::helper('klarnapushorder')->getAttrInfo($label, $value, Mage::getStoreConfig("revetab/general/klarna_attr_names"));
 
                     $variantAttr['super_attribute'][intval($attrInfo['labelId'])] = intval($attrInfo['valueId']);
                 }
@@ -52,7 +66,7 @@ class Reve_KlarnaPushOrder_Model_Order extends Mage_Sales_Model_Order
 
     public function saveQuote($_customer, $klarna_order)
     {
-        $quote = Mage::helper("klarna")->_getQuote();
+        $quote = Mage::helper("klarnapushorder")->_getQuote();
 
         // set billing and shipping based on customer defaults
         $shippingDefault = $_customer->getDefaultShippingAddress();
@@ -84,12 +98,14 @@ class Reve_KlarnaPushOrder_Model_Order extends Mage_Sales_Model_Order
         $quote->getBillingAddress()->addData($addressData);
         $shippingAddress = $quote->getShippingAddress()->addData($addressData);
 
+        $paymentMethodCode = $this->getPaymentMethodCode();
+
         // shipping and payments method
         $shippingAddress->setShippingMethod(self::SHIPPING_METHOD_CODE)
-            ->setPaymentMethod(self::PAYMENT_METHOD_CODE)
+            ->setPaymentMethod($paymentMethodCode)
             ->setCollectShippingRates(true)
             ->collectShippingRates();
-        $quote->getPayment()->addData(array('method' => self::PAYMENT_METHOD_CODE));
+        $quote->getPayment()->addData(array('method' => $paymentMethodCode));
 
         $quote->getPayment()->setAdditionalInformation(array(
 

@@ -9,9 +9,11 @@ NOTES:
 - Check customer associate to website (maybe we could add reve)
 
 TODO:
-- [ ] Wrap script as magento module
-- [ ] Add config page in module
+- [x] Wrap script as magento module
+- [x] Add config page in module
 - [ ] Add currency code
 - [x] Add tax
 - [x] Fix shipping method
 - [ ] Add support to different stores
+- [x] Support Avenla_KlarnaCheckout 1.2.1 and Klarna Official module
+

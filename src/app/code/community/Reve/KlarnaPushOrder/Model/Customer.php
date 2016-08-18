@@ -68,9 +68,9 @@ class Reve_KlarnaPushOrder_Model_Customer extends Mage_Customer_Model_Customer
                 throw new Exception($this->__("Customer Email is invalid"));
             }
 
-            Mage::log("User " . $this->getId(), null, "klarna-pushorder.log");
+            Mage::log("User " . $this->getId(), null, "klarnapushorder-pushorder.log");
         } catch (Exception $e) {
-            Mage::log(__METHOD__." exception (see exception.log)", null, "klarna-pushorder.log");
+            Mage::log(__METHOD__." exception (see exception.log)", null, "klarnapushorder-pushorder.log");
             Mage::logException($e);
         }
     }

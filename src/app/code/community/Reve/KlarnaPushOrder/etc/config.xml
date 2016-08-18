@@ -15,9 +15,9 @@
     <!--<frontend>-->
         <!--<layout>-->
             <!--<updates>-->
-                <!--<klarna>-->
+                <!--<klarnapushorder>-->
                     <!--<file>reve_klarna.xml</file>-->
-                <!--</klarna>-->
+                <!--</klarnapushorder>-->
             <!--</updates>-->
         <!--</layout>-->
     <!--</frontend>-->
@@ -26,34 +26,34 @@
         <events>
             <order_cancel_after>
                 <observers>
-                    <reve_klarna_model_observer_cancel_order>
+                    <reve_klarnapushorder_model_observer_cancel_order>
                         <type>singleton</type>
                         <class>Reve_KlarnaPushOrder_Model_Observer</class>
                         <method>cancelOrder</method>
-                    </reve_klarna_model_observer_cancel_order>
+                    </reve_klarnapushorder_model_observer_cancel_order>
                 </observers>
             </order_cancel_after>
         </events>
         <models>
-            <klarna>
+            <klarnapushorder>
                 <class>Reve_KlarnaPushOrder_Model</class>
-            </klarna>
+            </klarnapushorder>
         </models>
         <helpers>
-            <klarna>
+            <klarnapushorder>
                 <class>Reve_KlarnaPushOrder_Helper</class>
-            </klarna>
+            </klarnapushorder>
         </helpers>
     </global>
     <frontend>
         <routers>
-            <klarna>
+            <klarnapushorder>
                 <use>standard</use>
                 <args>
                     <module>Reve_KlarnaPushOrder</module>
-                    <frontName>klarna</frontName>
+                    <frontName>reve_klarna</frontName>
                 </args>
-            </klarna>
+            </klarnapushorder>
         </routers>
         <translate>
             <modules>
