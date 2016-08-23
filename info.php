@@ -57,11 +57,17 @@ foreach ($payments as $paymentCode=>$paymentModel) {
 $sendConfirmationMail = Mage::getStoreConfig('sales_email')['order']['enabled'] == 1;
 echo 'send confirmations: '. $sendConfirmationMail .'<br>';
 
+// Avenla module settings
 $klarnaServer = Mage::getStoreConfig('payment/klarnaCheckout_payment/server');
-if (!$klarnaServer) $klarnaServer = Mage::getStoreConfig('payment/vaimo_klarna_checkout/host');
-
 $klarnaSecret = Mage::helper('core')->decrypt(Mage::getStoreConfig('payment/klarnaCheckout_payment/sharedsecret'));
+
+// Klarna Official settings
+if (!$klarnaServer) $klarnaServer = Mage::getStoreConfig('payment/vaimo_klarna_checkout/host');
 if (!$klarnaSecret) $klarnaSecret = Mage::getStoreConfig('payment/vaimo_klarna_checkout/shared_secret');
+
+// Oddny/KL_Klarna_NG settings
+if (!$klarnaServer) $klarnaServer = (Mage::getStoreConfig('payment/klarna/live') == "1" ? "LIVE" : "DEMO");
+if (!$klarnaSecret) $klarnaSecret = Mage::getStoreConfig('payment/klarna/shared_secret');
 
 echo 'klarna server: '. $klarnaServer .'<br>';
 echo 'klarna secret: ';

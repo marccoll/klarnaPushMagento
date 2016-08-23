@@ -20,7 +20,8 @@ class Reve_KlarnaPushOrder_Model_Order extends Mage_Sales_Model_Order
       // Supported Payment methods:
       // vaimo_klarna_checkout = Klarna Official
       // klarnaCheckout_payment = Avenla module
-      $supportedMethods = ['vaimo_klarna_checkout', 'klarnaCheckout_payment']; // TODO: maybe allow to add additional in config?
+      // klarna_checkout = Oddny/KL_Klarna_NG
+      $supportedMethods = ['vaimo_klarna_checkout', 'klarnaCheckout_payment', 'klarna_checkout']; // TODO: maybe allow to add additional in config?
 
       foreach ($payments as $paymentCode=>$paymentModel) {
         $paymentTitle = Mage::getStoreConfig('payment/'.$paymentCode.'/title');
@@ -120,7 +121,10 @@ class Reve_KlarnaPushOrder_Model_Order extends Mage_Sales_Model_Order
 
           // Klarna Official module support (also need to set a AUTH transaction, see order save)
           'klarna_reservation_reference' => $klarna_order['id'],
-          'klarna_reservation_id' => $klarna_order['reservation']
+          'klarna_reservation_id' => $klarna_order['reservation'],
+
+          // Oddny/KL_Klarna_NG module support (also need to set a AUTH transaction, see order save)
+          'klarnaCheckoutId' => $klarna_order['id']
 
         ));
 

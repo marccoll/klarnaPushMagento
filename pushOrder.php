@@ -192,10 +192,9 @@ if ($klarnaOrder['status'] == 'created') {
                 // Klarna Official module
                 'klarna_reservation_reference' => KLARNA_ORDER_ID,
                 'klarna_reservation_id' => $klarnaOrder['reservation']
-    // ,'klarna_reservation_host' => 'BETA',
-        // 'merchant_id' => '6166',
-    // 'phonenumber' => '070 111 11 11',
-    // 'email' => 'andreas@reveapp.com'
+
+                // Oddny/KL_Klarna_NG module
+                'klarnaCheckoutId' => KLARNA_ORDER_ID
         ));
 
 
@@ -215,8 +214,7 @@ if ($klarnaOrder['status'] == 'created') {
     $service->submitAll();
     $newOrder = $service->getOrder();
 
-    // AW: added to get wotking with existing magento modules
-    // Klarna Official (or maybe should be generic for push orders?)
+    // Klarna Official and Oddny/KL_Klarna_NG ineed this auth transaction with Klarna reservation id
     $payment = $newOrder->getPayment();
     $payment->setTransactionId( $klarnaOrder['reservation'] )
     ->setIsTransactionClosed(0)

@@ -49,6 +49,10 @@ class Reve_KlarnaPushOrder_OrderController extends Mage_Checkout_Controller_Acti
             if (!$klarnaServer) $klarnaServer = Mage::getStoreConfig('payment/vaimo_klarna_checkout/host');
             if (!$klarnaSecret) $klarnaSecret = Mage::getStoreConfig('payment/vaimo_klarna_checkout/shared_secret');
 
+            // Oddny/KL_Klarna_NG settings
+            if (!$klarnaServer) $klarnaServer = (Mage::getStoreConfig('payment/klarna/live') == "1" ? "LIVE" : "DEMO");
+            if (!$klarnaSecret) $klarnaSecret = Mage::getStoreConfig('payment/klarna/shared_secret');
+
             // Klarna setup
             $klarnaUrl = Klarna_Checkout_Connector::BASE_URL;
             if ( in_array(strtolower($klarnaServer), ['demo', 'test', 'testdrive', 'beta']) ) {
@@ -118,7 +122,7 @@ class Reve_KlarnaPushOrder_OrderController extends Mage_Checkout_Controller_Acti
                     $service->submitAll();
                     $newOrder = $service->getOrder();
 
-                    // generate a auth transaction, needed for Klarna Offical Module
+                    // generate a auth transaction, needed for Klarna Offical Module and Oddny/KL_Klarna_NG
                     $payment = $newOrder->getPayment();
                     $payment->setTransactionId( $klarnaOrder['reservation'] )
                       ->setIsTransactionClosed(0)
