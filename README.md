@@ -1,3 +1,5 @@
+This is now **deprecated**! use https://github.com/reveapp/magento-klarna-push-order instead.
+
 # Create orders from Klarna into Magento
 
 - Place KlarnaPushMagento script into root public html folder.
